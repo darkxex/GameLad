@@ -43,8 +43,8 @@ SOURCES		:=	gb-emu gb-emu-lib
 DATA		:=	data
 INCLUDES	:=	gb-emu gb-emu-lib
 ROMFS		:=	romfs
-
-APP_TITLE   := GameLAD Switch
+ICON        :=  Icon.jpg
+APP_TITLE   := GameLADNX
 APP_AUTHOR  := Dooskington+AngelXex+tcfritchman+etc
 
 #---------------------------------------------------------------------------------
