@@ -184,7 +184,36 @@ buttons |= JOYPAD_BUTTONS_A;
 
     emulator.SetInput(input, buttons);
 }
+#ifdef __SWITCH__
+int getInd(char* curFile, int curIndex) {
+	DIR* dir;
+	struct dirent* ent;
 
+	if (curIndex < 0)
+		curIndex = 0;
+
+	dir = opendir("sdmc:/roms/");//Open current-working-directory.
+	if (dir == NULL)
+	{
+		sprintf(curFile, "Failed to open dir!");
+		return curIndex;
+	}
+	else
+	{
+		int i;
+		for (i = 0; i <= curIndex; i++) {
+			ent = readdir(dir);
+		}
+		if (ent)
+			sprintf(curFile, "sdmc:/roms/%s", ent->d_name);
+		else
+			curIndex--;
+		closedir(dir);
+	}
+
+	return curIndex;
+}
+#endif
 int main(int argc, char** argv)
 {
     romfsInit();
@@ -194,7 +223,9 @@ int main(int argc, char** argv)
     // Initialize the default gamepad (which reads handheld mode inputs as well as the first connected controller)
     
     padInitializeDefault(&pad);
-  
+  int curIndex = 0;
+	char curFile[255];
+	curIndex = getInd(curFile, curIndex);
    /* if(argc > 1)
     {
         windowScale = atoi(argv[1]);
@@ -204,7 +235,7 @@ int main(int argc, char** argv)
     //std::string bootROM = "res/games/dmg_bios.bin";
     //std::string bootROM = "res/games/gbc_bios.bin";
 
-    std::string romPath = "romfs:/game.gb";            // PASSED
+    std::string romPath = "sdmc:/roms/zelda.gb";            // PASSED
         //std::string romPath = "res/tests/01-special.gb";            // PASSED
         //std::string romPath = "res/tests/02-interrupts.gb";         // PASSED
         //std::string romPath = "res/tests/03-op sp,hl.gb";           // PASSED
@@ -247,6 +278,42 @@ int main(int argc, char** argv)
 
     bool isRunning = true;
     std::unique_ptr<SDL_Window, SDLWindowDeleter> spWindow;
+//selectrom
+  /*  consoleInit(NULL);
+
+while(appletMainLoop())
+    {consoleClear();
+        // Scan the gamepad. This should be done once for each frame
+        padUpdate(&pad);
+printf("\x1b[16;0HSelect the gb rom from your Roms folder with Left Button and Right Button:");
+        	printf("\x1b[18;0H%s", curFile);
+        // padGetButtonsDown returns the set of buttons that have been newly pressed in this frame compared to the previous one
+        u64 kDown = padGetButtonsDown(&pad);
+
+        if (kDown & HidNpadButton_Left)
+        
+        {
+             curIndex--;
+			curIndex = getInd(curFile, curIndex);
+			}
+        
+        if (kDown & HidNpadButton_Right)
+        
+        {
+            curIndex++;
+			curIndex = getInd(curFile, curIndex);
+		}
+        
+        if (kDown & HidNpadButton_A)
+        
+        { romPath = "roms/zelda.gb";   
+            break;}
+       
+        
+        consoleUpdate(NULL);
+    }
+
+    consoleExit(NULL);*/
 
     SDL_Event event;
 
