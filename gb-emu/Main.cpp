@@ -1,6 +1,10 @@
 #include "PCH.hpp"
 #include <Emulator.hpp>
-
+#ifdef __SWITCH__
+#include <unistd.h>
+#include <switch.h>
+#include <dirent.h>
+#endif 
 // 60 FPS or 16.67ms
 const double TimePerFrame = 1.0 / 60.0;
 
@@ -39,11 +43,13 @@ struct SDLTextureDeleter
         }
     }
 };
+  int windowWidth = 1280;
+    int windowHeight = 720;
 
 void Render(SDL_Renderer* pRenderer, SDL_Texture* pTexture, Emulator& emulator)
 {
     // Clear window
-    SDL_SetRenderDrawColor(pRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
+    SDL_SetRenderDrawColor(pRenderer, 0x00, 0x00, 0x00, 0xFF);
     SDL_RenderClear(pRenderer);
 
     byte* pPixels;
@@ -55,8 +61,13 @@ void Render(SDL_Renderer* pRenderer, SDL_Texture* pTexture, Emulator& emulator)
     memcpy(pPixels, pData, 160 * 144 * 4);
 
     SDL_UnlockTexture(pTexture);
-
-    SDL_RenderCopy(pRenderer, pTexture, nullptr, nullptr);
+    SDL_Rect dstrect;
+  
+dstrect.w = 160*5;
+dstrect.h = 144*5;
+  dstrect.x = (windowWidth - dstrect.w)/2;
+dstrect.y = 0;
+    SDL_RenderCopy(pRenderer, pTexture, nullptr, &dstrect);
 
     // Update window
     SDL_RenderPresent(pRenderer);
@@ -72,7 +83,7 @@ void VSyncCallback()
 {
     Render(spRenderer.get(), spTexture.get(), emulator);
 }
-
+PadState pad;
 void ProcessInput(Emulator& emulator)
 {
     SDL_PumpEvents();
@@ -120,24 +131,80 @@ void ProcessInput(Emulator& emulator)
         buttons |= JOYPAD_BUTTONS_SELECT;
     }
 
+
+
+        // Scan the gamepad. This should be done once for each frame
+        padUpdate(&pad);
+
+        // padGetButtonsDown returns the set of buttons that have been
+        // newly pressed in this frame compared to the previous one
+        u64 kDown = padGetButtonsDown(&pad);
+
+        // padGetButtons returns the set of buttons that are currently pressed
+        u64 kHeld = padGetButtons(&pad);
+
+        // padGetButtonsUp returns the set of buttons that have been
+        // newly released in this frame compared to the previous one
+        u64 kUp = padGetButtonsUp(&pad);
+
+        if (kDown & HidNpadButton_Plus)
+           {
+buttons |= JOYPAD_BUTTONS_START;
+           }
+        if (kDown & HidNpadButton_Minus)
+           {
+buttons |= JOYPAD_BUTTONS_SELECT;
+           }
+        if (kHeld & HidNpadButton_Left)
+           {
+ input |= JOYPAD_INPUT_LEFT;
+           }
+        if (kHeld & HidNpadButton_Up)
+           {
+               input |= JOYPAD_INPUT_UP;
+
+           }
+        if (kHeld & HidNpadButton_Right)
+           {
+input |= JOYPAD_INPUT_RIGHT;
+           }
+        if (kHeld & HidNpadButton_Down)
+           {
+input |= JOYPAD_INPUT_DOWN;
+           }
+        if (kDown & HidNpadButton_A)
+           {
+buttons |= JOYPAD_BUTTONS_A;
+           }
+        if (kDown & HidNpadButton_B)
+           {
+	buttons |= JOYPAD_BUTTONS_B;
+           }
+        
+
     emulator.SetInput(input, buttons);
 }
 
 int main(int argc, char** argv)
 {
-    int windowWidth = 160;
-    int windowHeight = 144;
-    int windowScale = 2;
-    if(argc > 1)
+    romfsInit();
+    // Configure our supported input layout: a single player with standard controller styles
+    padConfigureInput(1, HidNpadStyleSet_NpadStandard);
+
+    // Initialize the default gamepad (which reads handheld mode inputs as well as the first connected controller)
+    
+    padInitializeDefault(&pad);
+  
+   /* if(argc > 1)
     {
         windowScale = atoi(argv[1]);
     }
-
+*/
     std::string bootROM;
     //std::string bootROM = "res/games/dmg_bios.bin";
     //std::string bootROM = "res/games/gbc_bios.bin";
 
-    std::string romPath = "res/tests/cpu_instrs.gb";            // PASSED
+    std::string romPath = "romfs:/game.gb";            // PASSED
         //std::string romPath = "res/tests/01-special.gb";            // PASSED
         //std::string romPath = "res/tests/02-interrupts.gb";         // PASSED
         //std::string romPath = "res/tests/03-op sp,hl.gb";           // PASSED
@@ -194,11 +261,11 @@ int main(int argc, char** argv)
     spWindow = std::unique_ptr<SDL_Window, SDLWindowDeleter>(
         SDL_CreateWindow(
             "GameLad",
-            SDL_WINDOWPOS_UNDEFINED,
-            SDL_WINDOWPOS_UNDEFINED,
-            windowWidth * windowScale, // Original = 160
-            windowHeight * windowScale, // Original = 144
-            SDL_WINDOW_SHOWN));
+            0,
+            0,
+           windowWidth,// windowWidth * windowScale, // Original = 160
+           windowHeight,// windowHeight * windowScale, // Original = 144
+            0));
     if (spWindow == nullptr)
     {
         Logger::LogError("Window could not be created! SDL error: '%s'", SDL_GetError());
@@ -207,7 +274,7 @@ int main(int argc, char** argv)
 
     // Create renderer
     spRenderer = std::unique_ptr<SDL_Renderer, SDLRendererDeleter>(
-        SDL_CreateRenderer(spWindow.get(), -1, SDL_RENDERER_ACCELERATED));
+        SDL_CreateRenderer(spWindow.get(), 0, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC));
     if (spRenderer == nullptr)
     {
         Logger::LogError("Renderer could not be created! SDL error: '%s'", SDL_GetError());
@@ -272,6 +339,7 @@ int main(int argc, char** argv)
     spTexture.reset();
     spRenderer.reset();
     spWindow.reset();
+    romfsExit();
     SDL_Quit();
 
     return 0;
