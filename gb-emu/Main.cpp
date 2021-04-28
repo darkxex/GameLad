@@ -147,11 +147,11 @@ void ProcessInput(Emulator& emulator)
         // newly released in this frame compared to the previous one
         u64 kUp = padGetButtonsUp(&pad);
 
-        if (kDown & HidNpadButton_Plus)
+        if (kHeld & HidNpadButton_Plus)
            {
 buttons |= JOYPAD_BUTTONS_START;
            }
-        if (kDown & HidNpadButton_Minus)
+        if (kHeld & HidNpadButton_Minus)
            {
 buttons |= JOYPAD_BUTTONS_SELECT;
            }
@@ -172,11 +172,11 @@ input |= JOYPAD_INPUT_RIGHT;
            {
 input |= JOYPAD_INPUT_DOWN;
            }
-        if (kDown & HidNpadButton_A)
+        if (kHeld & HidNpadButton_A)
            {
 buttons |= JOYPAD_BUTTONS_A;
            }
-        if (kDown & HidNpadButton_B)
+        if (kHeld & HidNpadButton_B)
            {
 	buttons |= JOYPAD_BUTTONS_B;
            }
