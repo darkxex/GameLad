@@ -409,13 +409,13 @@ curIndex--;
 			curIndex = getInd(curFile, curIndex);
 				std::cout << curFile << std::endl;
            }
-           if (kHeld & HidNpadButton_Right)
+           if (kDown & HidNpadButton_Right)
            {
 curIndex++;
 			curIndex = getInd(curFile, curIndex);
 			std::cout << curFile << std::endl;
            }
-        if (kHeld & HidNpadButton_A)
+        if (kDown & HidNpadButton_A)
            {
                 romPath = curFile;
 quit = true;
