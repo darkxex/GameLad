@@ -1,3 +1,7 @@
+# GameLadNX
+
+Simple port for Nintendo Switch.
+Put your roms in "gbroms" folder in your SD, Press L3 + R3 for exit with SRAM Save.
 # GameLad
 
 This is a gameboy emulator that I made with [tyren](https://github.com/TyrenDe) in my early college days.
